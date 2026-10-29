@@ -1,0 +1,8 @@
+SAMPLE CITY MUNICIPAL HERITAGE CIRCULAR — REVISED TARIFF NOTICE (DEMONSTRATION)
+Document ID: sample-annex-006 | Publication Date: 2026-02-10
+Notice: Fictional demonstration circular created to test multi-document conflict detection.
+
+Section 1: Revision to Sample City National Museum Entry Tariff & Friday Closing Time
+Effective February 2026, the Sample City Department of Culture announces the following updates to the Sample City National Museum:
+1. Revised Adult Admission Tariff: The standard adult entry fee for the Sample City National Museum has been revised to INR 650 per adult (superseding the earlier INR 500 tariff printed in older tourist guidebooks).
+2. Friday Conservation Closing Hours: On Fridays, the Sample City National Museum closes early at 4:00 PM (16:00) instead of 5:00 PM for weekly conservation maintenance. Last ticket entry on Fridays is at 3:00 PM.

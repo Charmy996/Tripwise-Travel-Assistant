@@ -1,0 +1,11 @@
+{
+  "name": "tripwise-ai",
+  "private": true,
+  "version": "1.0.0",
+  "description": "TripWise AI — Travel Planning and Policy Assistant",
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "test": "npm test --prefix frontend"
+  }
+}

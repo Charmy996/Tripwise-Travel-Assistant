@@ -1,0 +1,32 @@
+# Python & Backend
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+env/
+backend/data/tripwise.db
+backend/data/tripwise.db-journal
+backend/data/uploaded_documents/
+
+# Node & Frontend
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+frontend/.vite/
+.vercel/
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
