@@ -4,8 +4,9 @@
   "version": "1.0.0",
   "description": "TripWise AI — Travel Planning and Policy Assistant",
   "scripts": {
+    "postinstall": "npm install --prefix frontend",
+    "build": "npm install --prefix frontend && npm run build --prefix frontend",
     "dev": "npm run dev --prefix frontend",
-    "build": "npm run build --prefix frontend",
     "test": "npm test --prefix frontend"
   }
 }
