@@ -8,20 +8,19 @@ venv/
 env/
 backend/data/tripwise.db
 backend/data/tripwise.db-journal
+backend/data/*.bak
 backend/data/uploaded_documents/
+*.bak
 
 # Node & Frontend
 node_modules/
-frontend/node_modules/
-dist/
 frontend/dist/
 frontend/.vite/
-.vercel/
+*.tsbuildinfo
 
 # Environment & Secrets
 .env
 .env.local
-.env.*.local
 backend/.env
 frontend/.env
 

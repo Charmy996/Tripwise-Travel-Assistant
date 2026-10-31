@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 
@@ -44,32 +44,19 @@ class Settings(BaseModel):
     EMBEDDING_MODEL_NAME: str = os.getenv("EMBEDDING_MODEL_NAME", "all-MiniLM-L6-v2")
     USE_NEURAL_EMBEDDINGS: bool = os.getenv("USE_NEURAL_EMBEDDINGS", "true").lower() == "true"
 
+    # Location Autocomplete Configuration
+    LOCATION_PROVIDER: str = os.getenv("LOCATION_PROVIDER", "nominatim")
+    LOCATION_API_TIMEOUT: float = float(os.getenv("LOCATION_API_TIMEOUT", "5.0"))
+    LOCATION_CACHE_TTL: int = int(os.getenv("LOCATION_CACHE_TTL", "86400"))
+    LOCATION_FALLBACK_ENABLED: bool = os.getenv("LOCATION_FALLBACK_ENABLED", "true").lower() == "true"
+
     @property
     def is_llm_configured(self) -> bool:
         return bool(self.LLM_API_KEY and self.LLM_API_KEY.strip() and self.LLM_PROVIDER != "local_demo")
 
 
 def get_settings() -> Settings:
-    cors_env = os.getenv("CORS_ORIGINS", "")
-    if cors_env.strip():
-        if cors_env.strip() == "*":
-            cors_origins = ["*"]
-        else:
-            cors_origins = [orig.strip() for orig in cors_env.split(",") if orig.strip()]
-    else:
-        cors_origins = [
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-            "http://localhost:5174",
-            "http://127.0.0.1:5174",
-            "http://localhost:3000",
-            "http://127.0.0.1:3000",
-            "http://localhost:4173",
-            "http://127.0.0.1:4173",
-        ]
-
     settings = Settings(
-        CORS_ORIGINS=cors_origins,
         LLM_PROVIDER=os.getenv("LLM_PROVIDER", "local_demo"),
         LLM_API_KEY=os.getenv("LLM_API_KEY", ""),
         LLM_BASE_URL=os.getenv("LLM_BASE_URL", "https://api.openai.com/v1"),
@@ -79,8 +66,10 @@ def get_settings() -> Settings:
         LIVE_ADVISORY_ENDPOINT=os.getenv("LIVE_ADVISORY_ENDPOINT", ""),
         LIVE_WEATHER_ENDPOINT=os.getenv("LIVE_WEATHER_ENDPOINT", ""),
         LIVE_TIMEOUT_SECONDS=float(os.getenv("LIVE_TIMEOUT_SECONDS", "5.0")),
-        EMBEDDING_MODEL_NAME=os.getenv("EMBEDDING_MODEL_NAME", "all-MiniLM-L6-v2"),
-        USE_NEURAL_EMBEDDINGS=os.getenv("USE_NEURAL_EMBEDDINGS", "true").lower() == "true",
+        LOCATION_PROVIDER=os.getenv("LOCATION_PROVIDER", "nominatim"),
+        LOCATION_API_TIMEOUT=float(os.getenv("LOCATION_API_TIMEOUT", "5.0")),
+        LOCATION_CACHE_TTL=int(os.getenv("LOCATION_CACHE_TTL", "86400")),
+        LOCATION_FALLBACK_ENABLED=os.getenv("LOCATION_FALLBACK_ENABLED", "true").lower() == "true",
     )
     settings.DATA_DIR.mkdir(parents=True, exist_ok=True)
     settings.SAMPLE_DOCS_DIR.mkdir(parents=True, exist_ok=True)

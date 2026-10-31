@@ -34,9 +34,44 @@ export type DocumentCategory =
   | 'accessibility_guidance'
   | 'other';
 
+export type DocumentProcessingStatus =
+  | 'uploaded'
+  | 'queued'
+  | 'extracting'
+  | 'chunking'
+  | 'generating_embeddings'
+  | 'indexing'
+  | 'completed'
+  | 'indexed'
+  | 'failed'
+  | 'processing';
+
+export interface LocationModel {
+  id: string;
+  name: string;
+  admin_area?: string;
+  country: string;
+  country_code?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  display_name: string;
+  type?: string;
+}
+
+export interface LocationSearchResponse {
+  query: string;
+  total: number;
+  provider: string;
+  cached: boolean;
+  attribution: string;
+  results: LocationModel[];
+}
+
 export interface TravellerPreferences {
   origin: string;
   destination: string;
+  origin_location?: LocationModel | null;
+  destination_location?: LocationModel | null;
   departure_date: string;
   return_date: string;
   travellers_count: number;
@@ -91,6 +126,7 @@ export interface ItineraryActivity {
   accessibility_note?: string | null;
   evidence_backed: boolean;
   verification_label: string;
+  is_manually_edited?: boolean;
   citations: CitationReference[];
   assumptions: string[];
 }
@@ -264,7 +300,8 @@ export interface TravelDocumentMetadata {
   last_verified_date?: string | null;
   destination: string;
   is_demonstration: boolean;
-  processing_status: 'indexed' | 'processing' | 'failed';
+  processing_status: DocumentProcessingStatus;
+  processing_error?: string | null;
   chunk_count: number;
   page_count: number;
   content_hash: string;
@@ -317,4 +354,39 @@ export interface SystemSettingsStatus {
   live_weather_configured: boolean;
   max_upload_size_mb: number;
   allowed_extensions: string[];
+  location_provider?: string;
+}
+
+export interface TripSummary {
+  trip_id: string;
+  title: string;
+  destination: string;
+  origin?: string;
+  created_at: string;
+  updated_at: string;
+  duration_days: number;
+  travel_style: string;
+  budget_total: number;
+  currency: string;
+  verification_summary_status: string;
+  is_fully_verified: boolean;
+}
+
+export interface DashboardSummary {
+  total_trips: number;
+  total_documents: number;
+  total_chunks: number;
+  total_workflows: number;
+  pending_tasks: number;
+  recent_trips: TripSummary[];
+  recent_documents: TravelDocumentMetadata[];
+  policy_warning_summary: Record<string, number>;
+}
+
+export interface DocumentListResponse {
+  items: TravelDocumentMetadata[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
 }

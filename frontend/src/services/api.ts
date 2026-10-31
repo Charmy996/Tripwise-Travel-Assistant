@@ -1,14 +1,18 @@
 import {
+  DashboardSummary,
+  DocumentListResponse,
   FinalTripPlan,
+  ItineraryDay,
   KnowledgeSearchResponse,
+  LocationSearchResponse,
   SystemSettingsStatus,
   TravelDocumentDetail,
   TravelDocumentMetadata,
   TravellerPreferences,
+  TripSummary,
 } from '../types/tripwise';
 
-const rawBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
-const API_BASE = rawBase ? rawBase.replace(/\/+$/, '') : '/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -38,8 +42,30 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const DEFAULT_DEMO_PREFERENCES: TravellerPreferences = {
-  origin: 'Mumbai, India',
+  origin: 'Mumbai, Maharashtra, India',
   destination: 'Sample City',
+  origin_location: {
+    id: 'fb-mum-1',
+    name: 'Mumbai',
+    admin_area: 'Maharashtra',
+    country: 'India',
+    country_code: 'IN',
+    latitude: 19.076,
+    longitude: 72.8777,
+    display_name: 'Mumbai, Maharashtra, India',
+    type: 'city',
+  },
+  destination_location: {
+    id: 'fb-sc-1',
+    name: 'Sample City',
+    admin_area: 'Demo State',
+    country: 'Demo Country',
+    country_code: 'DM',
+    latitude: 18.922,
+    longitude: 72.8347,
+    display_name: 'Sample City (Demo Knowledge Base Reference)',
+    type: 'city',
+  },
   departure_date: '2026-11-10',
   return_date: '2026-11-12',
   travellers_count: 2,
@@ -64,11 +90,24 @@ export const DEFAULT_DEMO_PREFERENCES: TravellerPreferences = {
 };
 
 export const api = {
-  getHealth: () => request<any>('/health'),
-  getSettingsStatus: () => request<SystemSettingsStatus>('/settings/status'),
+  getHealth: (signal?: AbortSignal) => request<any>('/health', { signal }),
+  getSettingsStatus: (signal?: AbortSignal) =>
+    request<SystemSettingsStatus>('/settings/status', { signal }),
+  getDashboardSummary: (signal?: AbortSignal) =>
+    request<DashboardSummary>('/dashboard/summary', { signal }),
 
-  listTrips: () => request<FinalTripPlan[]>('/trips'),
-  getTrip: (tripId: string) => request<FinalTripPlan>(`/trips/${encodeURIComponent(tripId)}`),
+  // Location search with debounce & abort support
+  searchLocations: (query: string, limit = 8, signal?: AbortSignal) =>
+    request<LocationSearchResponse>(
+      `/locations/search?q=${encodeURIComponent(query)}&limit=${limit}`,
+      { signal }
+    ),
+
+  listTrips: (signal?: AbortSignal) => request<FinalTripPlan[]>('/trips', { signal }),
+  getRecentTrips: (limit = 5, signal?: AbortSignal) =>
+    request<TripSummary[]>(`/trips/recent?limit=${limit}`, { signal }),
+  getTrip: (tripId: string, signal?: AbortSignal) =>
+    request<FinalTripPlan>(`/trips/${encodeURIComponent(tripId)}`, { signal }),
   createTrip: (prefs: TravellerPreferences, autoPlan = true) =>
     request<FinalTripPlan>(`/trips?auto_plan=${autoPlan}`, {
       method: 'POST',
@@ -78,6 +117,14 @@ export const api = {
     request<FinalTripPlan>(`/trips/${encodeURIComponent(tripId)}`, {
       method: 'PUT',
       body: JSON.stringify(prefs),
+    }),
+  updateTripItinerary: (tripId: string, days: ItineraryDay[], recalculateBudget = true) =>
+    request<FinalTripPlan>(`/trips/${encodeURIComponent(tripId)}/itinerary`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        itinerary_days: days,
+        recalculate_budget: recalculateBudget,
+      }),
     }),
   runTripPlan: (tripId: string) =>
     request<FinalTripPlan>(`/trips/${encodeURIComponent(tripId)}/plan`, {
@@ -104,12 +151,38 @@ export const api = {
     const qs = params.toString() ? `?${params.toString()}` : '';
     return request<TravelDocumentMetadata[]>(`/documents${qs}`);
   },
-  getDocument: (docId: string) =>
-    request<TravelDocumentDetail>(`/documents/${encodeURIComponent(docId)}`),
+
+  listDocumentsPaginated: (
+    opts: {
+      category?: string;
+      destination?: string;
+      status?: string;
+      search?: string;
+      page?: number;
+      limit?: number;
+    },
+    signal?: AbortSignal
+  ) => {
+    const params = new URLSearchParams();
+    if (opts.category && opts.category !== 'all') params.set('category', opts.category);
+    if (opts.destination && opts.destination.trim()) params.set('destination', opts.destination.trim());
+    if (opts.status && opts.status !== 'all') params.set('status', opts.status);
+    if (opts.search && opts.search.trim()) params.set('search', opts.search.trim());
+    params.set('page', String(opts.page || 1));
+    params.set('limit', String(opts.limit || 10));
+    return request<DocumentListResponse>(`/documents?${params.toString()}`, { signal });
+  },
+
+  getDocument: (docId: string, signal?: AbortSignal) =>
+    request<TravelDocumentDetail>(`/documents/${encodeURIComponent(docId)}`, { signal }),
   uploadDocument: (formData: FormData) =>
     request<TravelDocumentDetail>('/documents/upload', {
       method: 'POST',
       body: formData,
+    }),
+  retryDocumentProcessing: (docId: string) =>
+    request<TravelDocumentMetadata>(`/documents/${encodeURIComponent(docId)}/retry`, {
+      method: 'POST',
     }),
   reindexDocuments: () =>
     request<{ status: string; total_documents: number; total_chunks: number }>('/documents/reindex', {

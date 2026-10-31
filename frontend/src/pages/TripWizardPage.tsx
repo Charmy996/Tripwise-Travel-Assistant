@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { api, DEFAULT_DEMO_PREFERENCES } from '../services/api';
 import { PaceType, TravelScopeType, TravelStyleType, TravellerPreferences } from '../types/tripwise';
+import { CityAutocomplete } from '../components/CityAutocomplete';
 
 const INTEREST_OPTIONS = [
   'food',
@@ -59,6 +60,11 @@ export const TripWizardPage: React.FC = () => {
     if (targetStep >= 1) {
       if (!prefs.origin.trim()) return 'Origin city is required.';
       if (!prefs.destination.trim()) return 'Destination city or region is required.';
+      const normOrigin = (prefs.origin_location?.name || prefs.origin).trim().toLowerCase();
+      const normDest = (prefs.destination_location?.name || prefs.destination).trim().toLowerCase();
+      if (normOrigin === normDest) {
+        return 'Origin and Destination cities cannot be identical. Please select different cities.';
+      }
       if (!prefs.departure_date || !prefs.return_date) {
         return 'Both departure date and return date are required.';
       }
@@ -256,37 +262,51 @@ export const TripWizardPage: React.FC = () => {
 
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
-                  <label
-                    htmlFor="origin-input"
-                    className="block text-xs font-semibold text-slate-700"
-                  >
-                    Origin City *
-                  </label>
-                  <input
-                    id="origin-input"
-                    type="text"
+                  <CityAutocomplete
+                    label="Origin City"
+                    placeholder="Type origin city (e.g. Mum, New, Lon)..."
                     value={prefs.origin}
-                    onChange={(e) => setPrefs({ ...prefs, origin: e.target.value })}
-                    placeholder="e.g., Mumbai, India"
-                    className="mt-1.5 w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-teal-700 focus:outline-none"
+                    selectedLocation={prefs.origin_location}
+                    onChange={(loc, textVal) =>
+                      setPrefs((prev) => ({
+                        ...prev,
+                        origin: textVal,
+                        origin_location: loc,
+                      }))
+                    }
+                    required
                   />
+                  {prefs.origin_location && (
+                    <div className="mt-1 text-[11px] text-slate-500 flex items-center gap-1">
+                      <span>Coordinates: {prefs.origin_location.latitude?.toFixed(3)}, {prefs.origin_location.longitude?.toFixed(3)}</span>
+                      <span>•</span>
+                      <span>{prefs.origin_location.country}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="destination-input"
-                    className="block text-xs font-semibold text-slate-700"
-                  >
-                    Destination City or Region *
-                  </label>
-                  <input
-                    id="destination-input"
-                    type="text"
+                  <CityAutocomplete
+                    label="Destination City or Region"
+                    placeholder="Type destination (e.g. Sample City, Lon, Del)..."
                     value={prefs.destination}
-                    onChange={(e) => setPrefs({ ...prefs, destination: e.target.value })}
-                    placeholder="e.g., Sample City"
-                    className="mt-1.5 w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-teal-700 focus:outline-none"
+                    selectedLocation={prefs.destination_location}
+                    onChange={(loc, textVal) =>
+                      setPrefs((prev) => ({
+                        ...prev,
+                        destination: textVal,
+                        destination_location: loc,
+                      }))
+                    }
+                    required
                   />
+                  {prefs.destination_location && (
+                    <div className="mt-1 text-[11px] text-slate-500 flex items-center gap-1">
+                      <span>Coordinates: {prefs.destination_location.latitude?.toFixed(3)}, {prefs.destination_location.longitude?.toFixed(3)}</span>
+                      <span>•</span>
+                      <span>{prefs.destination_location.country}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div>

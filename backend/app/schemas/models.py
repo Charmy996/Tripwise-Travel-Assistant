@@ -29,11 +29,46 @@ DocumentCategory = Literal[
     "accessibility_guidance",
     "other",
 ]
+DocumentProcessingStatus = Literal[
+    "uploaded",
+    "queued",
+    "extracting",
+    "chunking",
+    "generating_embeddings",
+    "indexing",
+    "completed",
+    "indexed",
+    "failed",
+    "processing",
+]
+
+
+class LocationModel(BaseModel):
+    id: str = Field(..., description="Unique provider ID or hash")
+    name: str = Field(..., description="City or place name")
+    admin_area: Optional[str] = Field(default="", description="State, province or administrative area")
+    country: str = Field(..., description="Country name")
+    country_code: Optional[str] = Field(default="", description="ISO 3166-1 alpha-2 country code")
+    latitude: Optional[float] = Field(default=None, description="Geographical latitude")
+    longitude: Optional[float] = Field(default=None, description="Geographical longitude")
+    display_name: str = Field(..., description="Full descriptive location string")
+    type: str = Field(default="city", description="Location type (city, town, administrative, etc.)")
+
+
+class LocationSearchResponse(BaseModel):
+    query: str
+    total: int
+    provider: str
+    cached: bool = False
+    attribution: str = "Data © OpenStreetMap contributors"
+    results: List[LocationModel]
 
 
 class TravellerPreferences(BaseModel):
     origin: str = Field(..., min_length=1, description="Origin city and country")
     destination: str = Field(..., min_length=1, description="Destination city or region")
+    origin_location: Optional[LocationModel] = Field(default=None, description="Structured origin location object")
+    destination_location: Optional[LocationModel] = Field(default=None, description="Structured destination location object")
     departure_date: str = Field(..., description="YYYY-MM-DD departure date")
     return_date: str = Field(..., description="YYYY-MM-DD return date")
     travellers_count: int = Field(default=2, ge=1, le=50)
@@ -98,6 +133,7 @@ class ItineraryActivity(BaseModel):
     accessibility_note: Optional[str] = None
     evidence_backed: bool = True
     verification_label: str = "Supported by retrieved document"
+    is_manually_edited: bool = False
     citations: List[CitationReference] = Field(default_factory=list)
     assumptions: List[str] = Field(default_factory=list)
 
@@ -271,7 +307,8 @@ class TravelDocumentMetadata(BaseModel):
     last_verified_date: Optional[str] = None
     destination: str = "Sample City"
     is_demonstration: bool = True
-    processing_status: Literal["indexed", "processing", "failed"] = "indexed"
+    processing_status: DocumentProcessingStatus = "indexed"
+    processing_error: Optional[str] = None
     chunk_count: int = 0
     page_count: int = 1
     content_hash: str = ""
@@ -313,3 +350,42 @@ class KnowledgeSearchResponse(BaseModel):
     retrieval_method: str
     note: str = "Retrieval scores reflect semantic and keyword similarity, not factual confidence."
     results: List[RetrievedSource]
+
+
+class TripSummary(BaseModel):
+    trip_id: str
+    title: str
+    destination: str
+    origin: Optional[str] = None
+    created_at: str
+    updated_at: str
+    duration_days: int = 1
+    travel_style: str = "cultural"
+    budget_total: float = 0.0
+    currency: str = "INR"
+    verification_summary_status: str
+    is_fully_verified: bool = False
+
+
+class DashboardSummary(BaseModel):
+    total_trips: int
+    total_documents: int
+    total_chunks: int
+    total_workflows: int
+    pending_tasks: int
+    recent_trips: List[TripSummary] = Field(default_factory=list)
+    recent_documents: List[TravelDocumentMetadata] = Field(default_factory=list)
+    policy_warning_summary: Dict[str, int] = Field(default_factory=dict)
+
+
+class DocumentListResponse(BaseModel):
+    items: List[TravelDocumentMetadata]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
+
+class ItineraryUpdateRequest(BaseModel):
+    itinerary_days: List[ItineraryDay]
+    recalculate_budget: bool = True
