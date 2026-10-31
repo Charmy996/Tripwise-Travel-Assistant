@@ -86,7 +86,9 @@ export const DashboardPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Filters & Modals
-  const [policyFilter, setPolicyFilter] = useState<string>('ALL');
+  const [policyFilter, setPolicyFilter] = useState<string>(
+    searchParams.get('policyFilter') || 'ALL'
+  );
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [activeCitation, setActiveCitation] = useState<CitationReference | RetrievedSource | null>(
     null
